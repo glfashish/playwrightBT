@@ -1,0 +1,2 @@
+TestCase, templateName, customerReference, internalComment, CreditAmount, email, purposeOfPayment, accountDetails
+Create Domestic Wire Payment using Existing Template,007WireDom - 007wireT - Wire - Domestic, PlaywrightTest, Payment Created using Playwright Test,11.11, ashishk@golivefaster.com, Payment Created using Playwright Test,Account Name:Concentration  Shubham  5.20  Deleted  Wire - Domestic  007wireT

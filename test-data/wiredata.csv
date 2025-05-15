@@ -1,0 +1,4 @@
+paymentType,Req_FromAccountNumber,Opt_CustomerReference,Opt_InternalComments,Req_Name,Opt_AddressLine1,Opt_AddressLine2,Opt_City,Opt_State,Opt_PostalCode,Opt_Email,Req_ToAccountNumber,Req_BankCodeType,Req_BankCode,Req_ValueDate,Req_Charges,Req_CreditAmount,Opt_PurposeOfPayment
+Wire - Domestic,Accounts Payable - 5286394180 - FNBO - First National Bank of Omaha,BigBang,Test Playwright Comments,Howard,either 215,Madison Ave,Pasedena,California,110022,howard@bbt.com,1122334455,ABA,011000028 - STATE STREET,18-Apr,Beneficiary,11,Playwright Test
+Wire - Domestic,Accounts Payable - 5286394180 - FNBO - First National Bank of Omaha,,,Leonard,,,,,,,1122334455,ABA,011000028 - STATE STREET,18-Apr,Beneficiary,22,
+Wire - Domestic,Accounts Payable - 5286394180 - FNBO - First National Bank of Omaha,BigBang,Test Playwright Comments,Sheldon,either 215,Madison Ave,Pasedena,California,110022,howard@bbt.com,1122334455,ABA,011000028 - STATE STREET,18-Apr,Beneficiary,0,Playwright Test
