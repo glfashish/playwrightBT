@@ -9,8 +9,25 @@ import * as path from 'path';
  */
 export function getLoginCredentials(): { companyId: string; userId: string; password: string } {
   try {
-    // Read login configuration from the file prepared by workflow
-    const configPath = path.join(process.cwd(), 'config', 'login.json');
+    // Get runner label from environment, fallback to 'default'
+    const runnerLabel = process.env.RUNNER_LABEL || 'default';
+    console.log(`Current runner label: ${runnerLabel}`);
+    
+    // First try machine-specific config
+    let configPath = path.join(process.cwd(), 'config', `login-${runnerLabel}.json`);
+    
+    // If machine-specific config doesn't exist, try standard login.json
+    if (!fs.existsSync(configPath)) {
+      console.log(`Machine-specific config for ${runnerLabel} not found, trying login.json`);
+      configPath = path.join(process.cwd(), 'config', 'login.json');
+    }
+    
+    // If that doesn't exist either, fall back to default config
+    if (!fs.existsSync(configPath)) {
+      console.log(`login.json not found, falling back to default config`);
+      configPath = path.join(process.cwd(), 'config', 'login-default.json');
+    }
+    
     console.log(`Reading login configuration from: ${configPath}`);
     
     if (fs.existsSync(configPath)) {
@@ -18,7 +35,7 @@ export function getLoginCredentials(): { companyId: string; userId: string; pass
       console.log(`Using credentials for user: ${loginConfig.userId}`);
       return loginConfig;
     } else {
-      throw new Error('Login configuration file not found');
+      throw new Error('No login configuration file found after trying all fallbacks');
     }
   } catch (error) {
     console.error('Error reading login configuration:', error);
