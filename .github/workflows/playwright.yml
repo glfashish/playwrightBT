@@ -35,27 +35,87 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Configure Test User
+      - name: Create Login Configuration
         run: |
           Write-Host "Running on machine: $env:RUNNER_LABEL with user: $env:TEST_USER"
           
-          # Check for machine-specific login file
-          $configFile = "config/login-$env:RUNNER_LABEL.json"
-          if (Test-Path $configFile) {
-            Copy-Item $configFile -Destination "config/login.json" -Force
-            Write-Host "Using configuration for $env:RUNNER_LABEL"
-          } else {
-            Write-Host "No specific config found for $env:RUNNER_LABEL, using default config"
+          # Create config directory if it doesn't exist
+          if (-not (Test-Path "config")) {
+            New-Item -Path "config" -ItemType Directory -Force
+            Write-Host "Created config directory"
           }
+          
+          # Create a machine-specific config file if it doesn't exist
+          $machineSpecificConfig = "config/login-$env:RUNNER_LABEL.json"
+          if (-not (Test-Path $machineSpecificConfig)) {
+            Write-Host "Creating config file for $env:RUNNER_LABEL"
+            $userConfig = @{
+              companyId = "company123"
+              userId = if ($env:RUNNER_LABEL -eq "machine1") { "user1" } else { "user2" }
+              password = if ($env:RUNNER_LABEL -eq "machine1") { "password1" } else { "password2" }
+            } | ConvertTo-Json
+            
+            $userConfig | Out-File -FilePath $machineSpecificConfig -Encoding utf8
+          }
+          
+          # Always copy machine-specific config to login.json
+          Copy-Item $machineSpecificConfig -Destination "config/login.json" -Force
+          Write-Host "Using configuration for $env:RUNNER_LABEL"
+          
+          # Debug: Show config file content (except password)
+          $config = Get-Content "config/login.json" | ConvertFrom-Json
+          Write-Host "Config file loaded with userId: $($config.userId)"
+        shell: pwsh
 
       - name: Run Playwright Tests
         run: |
-          if ($env:GITHUB_EVENT_INPUTS_TEST_FILE) {
-            Write-Host "Running specified test file: $env:GITHUB_EVENT_INPUTS_TEST_FILE"
-            npx playwright test $env:GITHUB_EVENT_INPUTS_TEST_FILE
+          # Get test file input directly from github context
+          $testFile = "${{ github.event.inputs.test_file }}"
+          
+          if ($testFile) {
+            Write-Host "Running specified test file: $testFile"
+            npx playwright test "$testFile"
           } else {
             Write-Host "Running all test files"
             npx playwright test
           }
+        shell: pwsh
 
-      # ...existing Allure reporting steps...
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30
+
+      - name: Install Allure Command Line
+        if: always()
+        run: npm install -g allure-commandline
+        shell: pwsh
+
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          allure generate allure-results --clean -o allure-report
+          Write-Host "Allure report generated"
+        shell: pwsh
+
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 30
+
+      - name: Publish Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          publish_branch: gh-pages
+          keep_files: true
