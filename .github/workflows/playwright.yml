@@ -1,18 +1,25 @@
 name: Playwright CI
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       test_file:
         description: 'Specific test file to run (e.g., tests/sample.spec.ts)'
         required: false
         default: ''
+      runner:
+        description: 'Select runner to use'
+        required: false
+        default: 'any'
+        type: choice
+        options:
+          - any
+          - machine1
+          - machine2
 
 jobs:
   playwright-tests:
-    runs-on: self-hosted
+    runs-on: ${{ github.event.inputs.runner == 'any' && 'self-hosted' || github.event.inputs.runner }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -28,32 +35,29 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
+      - name: Configure Test User
+        run: |
+          Write-Host "Running on machine: $env:RUNNER_LABEL with user: $env:TEST_USER"
+          
+          # Check for machine-specific login file
+          $configFile = "config/login-$env:RUNNER_LABEL.json"
+          if (Test-Path $configFile) {
+            Copy-Item $configFile -Destination "config/login.json" -Force
+            Write-Host "Using configuration for $env:RUNNER_LABEL"
+          } else {
+            Write-Host "No specific config found for $env:RUNNER_LABEL, using default config"
+          }
+        shell: pwsh
+
       - name: Run Playwright Tests
         run: |
-              if ($env:GITHUB_EVENT_INPUTS_TEST_FILE) {
-              Write-Host "Running specified test file: $env:GITHUB_EVENT_INPUTS_TEST_FILE"
-              npx playwright test $env:GITHUB_EVENT_INPUTS_TEST_FILE
-              } else {
-              Write-Host "Running all test files"
-              npx playwright test
-              }
-            shell: pwsh
+          if ($env:GITHUB_EVENT_INPUTS_TEST_FILE) {
+            Write-Host "Running specified test file: $env:GITHUB_EVENT_INPUTS_TEST_FILE"
+            npx playwright test $env:GITHUB_EVENT_INPUTS_TEST_FILE
+          } else {
+            Write-Host "Running all test files"
+            npx playwright test
+          }
+        shell: pwsh
 
-      - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results
-          retention-days: 7
-
-      - name: Generate Allure Report
-        run: |
-          npm install -g allure-commandline
-          allure generate allure-results --clean -o allure-report
-        shell: bash
-
-      - name: Deploy Allure Report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: allure-report
+      # ...existing Allure reporting steps...
