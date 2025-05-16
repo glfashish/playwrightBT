@@ -47,7 +47,6 @@ jobs:
           } else {
             Write-Host "No specific config found for $env:RUNNER_LABEL, using default config"
           }
-        shell: pwsh
 
       - name: Run Playwright Tests
         run: |
@@ -58,6 +57,5 @@ jobs:
             Write-Host "Running all test files"
             npx playwright test
           }
-        shell: pwsh
 
       # ...existing Allure reporting steps...
