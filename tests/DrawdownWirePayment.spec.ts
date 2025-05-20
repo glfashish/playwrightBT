@@ -9,12 +9,9 @@ import { PaymentPage } from '../pages/PaymentPage';
 import { DrawdownWirePaymentPage, DrawdownWirePaymentCSVData } from '../pages/DrawdownWirePage';
 import { POManager } from  '../pages/POManager';
 
-// JSON data
-import loginData from '../test-data/login.json';
-
 // Import Utilities
 import { csvToJson } from '../utils/csvtojson';
-import { loginAndNavigateHome } from '../utils/loginAndNavigateHome';
+import { loginAndNavigateHome, releaseUserSession } from '../utils/loginAndNavigateHome';
 
 // —— load & type the CSV rows as PaymentData[]
 const DrawdownWireData = csvToJson<DrawdownWirePaymentCSVData>('test-data/DrawdownWireData.csv');
@@ -27,6 +24,11 @@ const DrawdownWireData = csvToJson<DrawdownWirePaymentCSVData>('test-data/Drawdo
 // ==========================================================================================================
 
 test.describe('Drawdown Wire Payment Creation Test', () => {
+    // Add afterEach hook to release user session
+  test.afterEach(async () => {
+    await releaseUserSession();
+  });
+
     DrawdownWireData.forEach((paymentTestData, index) => {
     test(`Test ${index + 1}: ${paymentTestData.TestCase}`, async ({ page }) => {
     // Start POManager
@@ -34,9 +36,9 @@ test.describe('Drawdown Wire Payment Creation Test', () => {
       //wait page.pause(); // Pause for debugging
       
     // —— LOGIN ————————————————————————————————————————————————————————————————————————————————————————————
-      await loginAndNavigateHome(page, loginData);
-        // Wait for Login Menu to be visible
-        await expect(page.getByRole('menuitem', { name: 'Home' })).toBeVisible();
+      // Updated login call without loginData parameter
+      await loginAndNavigateHome(page);
+      await expect(page.getByRole('menuitem', { name: 'Home' })).toBeVisible()
 
     // —— PAYMENT PAGE —————————————————————————————————————————————————————————————————————————————————————
       const paymentPage = pom.getPaymentPage();

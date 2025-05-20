@@ -4,60 +4,143 @@ on:
   workflow_dispatch:
     inputs:
       test_file:
-        description: 'Specific test file to run (e.g., tests/sample.spec.ts)'
+        description: 'Test file to run (e.g., tests/DrawdownWirePayment.spec.ts)'
         required: false
         default: ''
       runner:
         description: 'Select runner to use'
-        required: false
-        default: 'any'
+        required: true
         type: choice
         options:
           - any
           - machine1
           - machine2
+        default: 'any'
+      user_mode:
+        description: 'Select user mode'
+        required: true
+        type: choice
+        options:
+          - general
+          - admin
+        default: 'general'
 
 jobs:
-  playwright-tests:
+  test:
+    name: Run Playwright Tests
     runs-on: ${{ github.event.inputs.runner == 'any' && 'self-hosted' || github.event.inputs.runner }}
+    timeout-minutes: 60
+    
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: Configure Test User
+      - name: Install dependencies
         run: |
-          Write-Host "Running on machine: $env:RUNNER_LABEL with user: $env:TEST_USER"
+          npm ci
+          npx playwright install --with-deps
+        shell: pwsh
+
+      - name: Create Login Configuration
+        run: |
+          Write-Host "Running on machine: $env:RUNNER_LABEL with user mode: ${{ github.event.inputs.user_mode }}"
           
-          # Check for machine-specific login file
-          $configFile = "config/login-$env:RUNNER_LABEL.json"
-          if (Test-Path $configFile) {
-            Copy-Item $configFile -Destination "config/login.json" -Force
-            Write-Host "Using configuration for $env:RUNNER_LABEL"
-          } else {
-            Write-Host "No specific config found for $env:RUNNER_LABEL, using default config"
+          # Create config directory
+          New-Item -Path "config" -ItemType Directory -Force
+          
+          # Create admin user config
+          $adminConfig = @{
+            companyId = "${{ secrets.COMPANY_ID }}"
+            userId = "${{ secrets.ADMIN_USER_ID }}"
+            password = "${{ secrets.ADMIN_PASSWORD }}"
           }
+          $adminConfig | ConvertTo-Json | Out-File -FilePath "config/login-admin.json" -Encoding UTF8NoBOM
+          
+          # Create general user configs
+          $user1Config = @{
+            companyId = "${{ secrets.COMPANY_ID }}"
+            userId = "${{ secrets.USER1_ID }}"
+            password = "${{ secrets.USER1_PASSWORD }}"
+          }
+          $user1Config | ConvertTo-Json | Out-File -FilePath "config/login-user1.json" -Encoding UTF8NoBOM
+          
+          $user2Config = @{
+            companyId = "${{ secrets.COMPANY_ID }}"
+            userId = "${{ secrets.USER2_ID }}"
+            password = "${{ secrets.USER2_PASSWORD }}"
+          }
+          $user2Config | ConvertTo-Json | Out-File -FilePath "config/login-user2.json" -Encoding UTF8NoBOM
+          
+          $user3Config = @{
+            companyId = "${{ secrets.COMPANY_ID }}"
+            userId = "${{ secrets.USER3_ID }}"
+            password = "${{ secrets.USER3_PASSWORD }}"
+          }
+          $user3Config | ConvertTo-Json | Out-File -FilePath "config/login-user3.json" -Encoding UTF8NoBOM
+          
+          Write-Host "Created login configuration files"
         shell: pwsh
 
-      - name: Run Playwright Tests
+      - name: Run Playwright tests
         run: |
-          if ($env:GITHUB_EVENT_INPUTS_TEST_FILE) {
-            Write-Host "Running specified test file: $env:GITHUB_EVENT_INPUTS_TEST_FILE"
-            npx playwright test $env:GITHUB_EVENT_INPUTS_TEST_FILE
+          $testFile = "${{ github.event.inputs.test_file }}"
+          $isAdminMode = "${{ github.event.inputs.user_mode }}" -eq "admin"
+          
+          # Set workers based on mode
+          $workers = if ($isAdminMode) { 1 } else { 3 }
+          
+          if ($testFile) {
+            Write-Host "Running specific test: $testFile in $($isAdminMode ? 'ADMIN' : 'GENERAL') mode"
+            npx playwright test "$testFile" --workers=$workers
           } else {
-            Write-Host "Running all test files"
-            npx playwright test
+            Write-Host "Running all tests in $($isAdminMode ? 'ADMIN' : 'GENERAL') mode"
+            npx playwright test --workers=$workers
           }
         shell: pwsh
+        env:
+          RUNNER_LABEL: ${{ runner.name }}
+          USE_ADMIN_USER: ${{ github.event.inputs.user_mode == 'admin' && 'true' || 'false' }}
+          CI: true
 
-      # ...existing Allure reporting steps...
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30
+
+      - name: Install Allure Command Line
+        if: always()
+        run: npm install -g allure-commandline
+
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          allure generate allure-results --clean -o allure-report
+          Write-Host "Allure report generated"
+
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 30
+
+      - name: Publish Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          publish_branch: gh-pages
+          keep_files: true

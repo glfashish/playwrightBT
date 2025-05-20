@@ -1,0 +1,164 @@
+# Test info
+
+- Name: Drawdown Wire Payment Creation Test >> Test 2: R2Successful Drawdown wire payment with all fields
+- Location: C:\Users\Aashishk\Documents\PlaywrightBT\tests\DrawdownWirePayment.spec.ts:34:9
+
+# Error details
+
+```
+Error: locator.click: Target page, context or browser has been closed
+Call log:
+  - waiting for getByRole('option', { name: 'AAAARSBGXXX - TELENOR BANKA AD - OMLADINSKIH BRIGADA 90V - BEOGRAD', exact: true })
+
+    at DrawdownWirePaymentPage.createPayment (C:\Users\Aashishk\Documents\PlaywrightBT\pages\DrawdownWirePage.ts:93:90)
+    at C:\Users\Aashishk\Documents\PlaywrightBT\tests\DrawdownWirePayment.spec.ts:58:7
+```
+
+# Test source
+
+```ts
+   1 | import { Page } from '@playwright/test';
+   2 |
+   3 | // Interface to represent data from DrawdownWireData.csv
+   4 | export interface DrawdownWirePaymentCSVData {
+   5 |   TestCase: string;
+   6 |   PaymentType: string;
+   7 |   Req_Account: string;
+   8 |   Opt_CustomerReference?: string;
+   9 |   Opt_InternalComment?: string;
+   10 |   Req_name: string;
+   11 |   Opt_AddressLine_1?: string;
+   12 |   Opt_Address_line_2?: string;
+   13 |   Opt_Country?: string;
+   14 |   Opt_City: string;
+   15 |   Opt_State?: string;
+   16 |   Opt_PostalCode?: string;
+   17 |   Req_AccountType: string;
+   18 |   Req_AccountNumber: string;
+   19 |   Req_BankCode: string;
+   20 |   Req_ValueDate: string;
+   21 |   Opt_Charges?: string;
+   22 |   Req_Amount: string;
+   23 | }
+   24 |
+   25 | export class DrawdownWirePaymentPage {
+   26 |   constructor(private page: Page) {}
+   27 |
+   28 |   /**
+   29 |    * Creates a drawdown wire payment using the provided payment data
+   30 |    * @param paymentData Data from the DrawdownWireData.csv file
+   31 |    */
+   32 |   async createPayment(paymentData: DrawdownWirePaymentCSVData): Promise<void> {
+   33 |     // Select Account
+   34 |     await this.page.getByRole('button', { name: '* Account  ??dropdown??' }).click();
+   35 |     await this.page.getByRole('option', { name: paymentData.Req_Account.split(' - ')[0] }).click();
+   36 |
+   37 |     // Fill optional customer reference
+   38 |     if (paymentData.Opt_CustomerReference) {
+   39 |       await this.page.getByRole('textbox', { name: 'Customer Reference' }).click();
+   40 |       await this.page.getByRole('textbox', { name: 'Customer Reference' }).fill(paymentData.Opt_CustomerReference);
+   41 |     }
+   42 |
+   43 |     // Fill optional internal comment
+   44 |     if (paymentData.Opt_InternalComment) {
+   45 |       await this.page.getByRole('textbox', { name: 'Internal Comment' }).click();
+   46 |       await this.page.getByRole('textbox', { name: 'Internal Comment' }).fill(paymentData.Opt_InternalComment);
+   47 |     }
+   48 |
+   49 |     // Fill required name
+   50 |     await this.page.getByRole('textbox', { name: '* " / "Name' }).click();
+   51 |     await this.page.getByRole('textbox', { name: '* " / "Name' }).fill(paymentData.Req_name);
+   52 |
+   53 |     // Fill optional address line 1
+   54 |     if (paymentData.Opt_AddressLine_1) {
+   55 |       await this.page.getByRole('textbox', { name: 'Address Line 1' }).click();
+   56 |       await this.page.getByRole('textbox', { name: 'Address Line 1' }).fill(paymentData.Opt_AddressLine_1);
+   57 |     }
+   58 |
+   59 |     // Fill optional address line 2
+   60 |     if (paymentData.Opt_Address_line_2) {
+   61 |       await this.page.getByRole('textbox', { name: 'Address Line 2' }).click();
+   62 |       await this.page.getByRole('textbox', { name: 'Address Line 2' }).fill(paymentData.Opt_Address_line_2);
+   63 |     }
+   64 |
+   65 |     // Fill required city
+   66 |     await this.page.getByRole('textbox', { name: '* " / "City' }).click();
+   67 |     await this.page.getByRole('textbox', { name: '* " / "City' }).fill(paymentData.Opt_City);
+   68 |
+   69 |     // Select state if provided
+   70 |     if (paymentData.Opt_State) {
+   71 |       await this.page.getByRole('button', { name: 'State ??dropdown??' }).click();
+   72 |       await this.page.getByRole('searchbox', { name: 'Filter' }).click();
+   73 |       await this.page.getByRole('searchbox', { name: 'Filter' }).fill(paymentData.Opt_State);
+   74 |       await this.page.getByRole('option', { name: paymentData.Opt_State }).click();
+   75 |     }
+   76 |
+   77 |     // Fill optional postal code
+   78 |     if (paymentData.Opt_PostalCode) {
+   79 |       await this.page.getByRole('textbox', { name: 'Postal Code' }).click();
+   80 |       await this.page.getByRole('textbox', { name: 'Postal Code' }).fill(paymentData.Opt_PostalCode);
+   81 |     }
+   82 |
+   83 |     // Select account type
+   84 |     await this.page.getByRole('link', { name: '--Select--' }).click();
+   85 |     await this.page.getByRole('option', { name: paymentData.Req_AccountType }).click();
+   86 |
+   87 |     // Fill account number
+   88 |     await this.page.getByRole('textbox', { name: 'Account Number' }).click();
+   89 |     await this.page.getByRole('textbox', { name: 'Account Number' }).fill(paymentData.Req_AccountNumber);
+   90 |
+   91 |     // Select bank code
+   92 |     await this.page.locator('#s2id_BENE_BANK_ID').getByRole('link').click();
+>  93 |     await this.page.getByRole('option', { name: paymentData.Req_BankCode, exact: true }).click();
+      |                                                                                          ^ Error: locator.click: Target page, context or browser has been closed
+   94 |
+   95 |     // Value Date
+   96 |     await this.page.getByRole('textbox', { name: '* " / "Value Date' }).click();
+   97 |     await this.page.getByRole('textbox', { name: '* " / "Value Date' }).fill(paymentData.Req_ValueDate);
+   98 |
+   99 |     // Select charges if provided
+  100 |     if (paymentData.Opt_Charges) {
+  101 |       await this.page.getByRole('button', { name: 'Charges ??dropdown??' }).click();
+  102 |       await this.page.getByRole('option', { name: paymentData.Opt_Charges }).click();
+  103 |     }
+  104 |
+  105 |     // Fill amount
+  106 |     await this.page.getByRole('textbox', { name: 'Amount' }).click();
+  107 |     await this.page.getByRole('textbox', { name: 'Amount' }).fill(paymentData.Req_Amount);
+  108 |
+  109 |     // Submit the payment
+  110 |     await this.page.getByRole('button', { name: 'Submit' }).click();
+  111 |     await this.page.getByRole('button', { name: 'Submit' }).click();
+  112 |   }
+  113 |
+  114 | // ---- APPROVE PAYMENT ---------------------------------------------------------------------------------------------------
+  115 |     /**
+  116 |      * Approves the payment by performing search, selecting the account checkbox, and clicking Approve.
+  117 |      * @param searchValue - The value to search in the 'Search value' field.
+  118 |      * @param checkboxName - The partial name value for the checkbox (using contains match).
+  119 |      */
+  120 |     async approvePayment(searchValue: string, checkboxName: string): Promise<void> {
+  121 |         // Click to expand the search filter options.
+  122 |         await this.page.locator('#dashboard-region-10').getByText('Select fields 0 Selected caret-down').click();
+  123 |         
+  124 |         // Select search field (ID).
+  125 |         await this.page.getByRole('link', { name: 'ID', exact: true }).click();
+  126 |         
+  127 |         // Fill in the search value.
+  128 |         await this.page.getByRole('textbox', { name: 'Search value' }).click();
+  129 |         await this.page.getByRole('textbox', { name: 'Search value' }).fill(searchValue);
+  130 |         await this.page.getByRole('textbox', { name: 'Search value' }).press('Enter');
+  131 |         
+  132 |         // Apply search filter.
+  133 |         //await this.page.getByRole('button', { name: 'Apply' }).click();
+  134 |         
+  135 |         // Locate and check the account checkbox using a contains match on its aria-label.
+  136 |         await this.page.locator('#dashboard-region-10').getByText('View').first().click();
+  137 |         
+  138 |         // Click the Approve button and then confirm with Yes.
+  139 |         await this.page.getByRole('button', { name: 'Approve', exact: true }).click();
+  140 |         //await this.page.getByRole('button', { name: 'Yes' }).click();
+  141 |     }
+  142 | }
+  143 |
+```

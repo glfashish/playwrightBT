@@ -1,78 +1,64 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect, test } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import * as fs from 'fs';
 import * as path from 'path';
+import { userSessionManager } from '../utils/userSessionManager';
 
 /**
- * Retrieves login credentials from configuration
- * Uses machine-specific config if available or falls back to default
+ * Set the execution mode to use admin user
+ * @param useAdmin - Whether to use admin user for tests
  */
-export function getLoginCredentials(): { companyId: string; userId: string; password: string } {
+export function setAdminMode(useAdmin: boolean): void {
+  userSessionManager.setAdminMode(useAdmin);
+}
+
+/**
+ * Logs in to the application and navigates to the home page
+ * Uses admin or general user based on configured mode
+ * @param page - Playwright page object
+ */
+export async function loginAndNavigateHome(page: Page): Promise<void> {
+  // Get worker ID from test info or generate a unique one
+  const workerId = test.info().workerIndex.toString();
+  
   try {
-    // Get runner label from environment, fallback to 'default'
-    const runnerLabel = process.env.RUNNER_LABEL || 'default';
-    console.log(`Current runner label: ${runnerLabel}`);
+    // Acquire a user credential from the pool based on mode
+    const credentials = await userSessionManager.acquireUser(workerId);
+    console.log(`Worker ${workerId} using user: ${credentials.userId}`);
     
-    // First try machine-specific config
-    let configPath = path.join(process.cwd(), 'config', `login-${runnerLabel}.json`);
+    // Initialize login page and wait for load
+    const loginPage = new LoginPage(page);
+    await loginPage.navigate();
     
-    // If machine-specific config doesn't exist, try standard login.json
-    if (!fs.existsSync(configPath)) {
-      console.log(`Machine-specific config for ${runnerLabel} not found, trying login.json`);
-      configPath = path.join(process.cwd(), 'config', 'login.json');
-    }
+    // Wait for page to be ready
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
+
+    // Perform login with acquired credentials
+    await loginPage.login(credentials.companyId, credentials.userId, credentials.password);
+
+    // Wait for successful login
+    const homeMenuItem = page.getByRole('menuitem', { name: 'Home' });
+    await expect(homeMenuItem).toBeVisible({ timeout: 30000 });
+
+    // Click home menu and wait for navigation
+    await Promise.all([
+      page.waitForLoadState('networkidle'),
+      homeMenuItem.click()
+    ]);
     
-    // If that doesn't exist either, fall back to default config
-    if (!fs.existsSync(configPath)) {
-      console.log(`login.json not found, falling back to default config`);
-      configPath = path.join(process.cwd(), 'config', 'login-default.json');
-    }
-    
-    console.log(`Reading login configuration from: ${configPath}`);
-    
-    if (fs.existsSync(configPath)) {
-      const loginConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      console.log(`Using credentials for user: ${loginConfig.userId}`);
-      return loginConfig;
-    } else {
-      throw new Error('No login configuration file found after trying all fallbacks');
-    }
+    console.log(`Worker ${workerId} successfully logged in with user: ${credentials.userId}`);
   } catch (error) {
-    console.error('Error reading login configuration:', error);
+    console.error(`Worker ${workerId} login failed:`, error);
     throw error;
   }
 }
 
 /**
- * Logs in to the application and navigates to the home page with proper synchronization
- * Uses machine-specific credentials from configuration file
- * @param page - Playwright page object
- * @returns Promise<void>
+ * Releases a user session at the end of the test
+ * No-op if in admin mode
  */
-export async function loginAndNavigateHome(page: Page): Promise<void> {
-  // Get login credentials from configuration
-  const loginData = getLoginCredentials();
-  
-  // Initialize login page and wait for load
-  const loginPage = new LoginPage(page);
-  await loginPage.navigate();
-  
-  // Wait for page to be ready
-  await page.waitForLoadState('domcontentloaded');
-  await page.waitForLoadState('networkidle');
-
-  // Perform login with credentials
-  await loginPage.login(loginData.companyId, loginData.userId, loginData.password);
-
-  // Wait for successful login
-  const homeMenuItem = page.getByRole('menuitem', { name: 'Home' });
-  await expect(homeMenuItem).toBeVisible({ timeout: 30000 });
-
-  // Click home menu and wait for navigation
-  await Promise.all([
-    page.waitForLoadState('networkidle'),
-    homeMenuItem.click()
-  ]);
-  
-  console.log(`Successfully logged in with user: ${loginData.userId}`);
+export async function releaseUserSession(): Promise<void> {
+  const workerId = test.info().workerIndex.toString();
+  userSessionManager.releaseUser(workerId);
 }
