@@ -45,7 +45,6 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps
-        shell: pwsh
 
       - name: Create Login Configuration
         run: |
@@ -85,7 +84,6 @@ jobs:
           $user3Config | ConvertTo-Json | Out-File -FilePath "config/login-user3.json" -Encoding UTF8NoBOM
           
           Write-Host "Created login configuration files"
-        shell: pwsh
 
       - name: Run Playwright tests
         run: |
@@ -102,7 +100,7 @@ jobs:
             Write-Host "Running all tests in $($isAdminMode ? 'ADMIN' : 'GENERAL') mode"
             npx playwright test --workers=$workers
           }
-        shell: pwsh
+          
         env:
           RUNNER_LABEL: ${{ runner.name }}
           USE_ADMIN_USER: ${{ github.event.inputs.user_mode == 'admin' && 'true' || 'false' }}
