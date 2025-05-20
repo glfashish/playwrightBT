@@ -59,7 +59,7 @@ jobs:
             userId = "${{ secrets.ADMIN_USER_ID }}"
             password = "${{ secrets.ADMIN_PASSWORD }}"
           }
-          $adminConfig | ConvertTo-Json | Out-File -FilePath "config/login-admin.json" -Encoding UTF8NoBOM
+          $adminConfig | ConvertTo-Json | Out-File -FilePath "config/login-admin.json" -Encoding UTF8
           
           # Create general user configs
           $user1Config = @{
@@ -67,21 +67,21 @@ jobs:
             userId = "${{ secrets.USER1_ID }}"
             password = "${{ secrets.USER1_PASSWORD }}"
           }
-          $user1Config | ConvertTo-Json | Out-File -FilePath "config/login-user1.json" -Encoding UTF8NoBOM
+          $user1Config | ConvertTo-Json | Out-File -FilePath "config/login-user1.json" -Encoding UTF8
           
           $user2Config = @{
             companyId = "${{ secrets.COMPANY_ID }}"
             userId = "${{ secrets.USER2_ID }}"
             password = "${{ secrets.USER2_PASSWORD }}"
           }
-          $user2Config | ConvertTo-Json | Out-File -FilePath "config/login-user2.json" -Encoding UTF8NoBOM
+          $user2Config | ConvertTo-Json | Out-File -FilePath "config/login-user2.json" -Encoding UTF8
           
           $user3Config = @{
             companyId = "${{ secrets.COMPANY_ID }}"
             userId = "${{ secrets.USER3_ID }}"
             password = "${{ secrets.USER3_PASSWORD }}"
           }
-          $user3Config | ConvertTo-Json | Out-File -FilePath "config/login-user3.json" -Encoding UTF8NoBOM
+          $user3Config | ConvertTo-Json | Out-File -FilePath "config/login-user3.json" -Encoding UTF8
           
           Write-Host "Created login configuration files"
 
