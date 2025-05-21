@@ -93,14 +93,16 @@ jobs:
           # Set workers based on mode
           $workers = if ($isAdminMode) { 1 } else { 3 }
           
+          # Set mode display string
+          $modeString = if ($isAdminMode) { "ADMIN" } else { "GENERAL" }
+          
           if ($testFile) {
-            Write-Host "Running specific test: $testFile in $($isAdminMode ? 'ADMIN' : 'GENERAL') mode"
+            Write-Host "Running specific test: $testFile in $modeString mode"
             npx playwright test "$testFile" --workers=$workers
           } else {
-            Write-Host "Running all tests in $($isAdminMode ? 'ADMIN' : 'GENERAL') mode"
+            Write-Host "Running all tests in $modeString mode"
             npx playwright test --workers=$workers
           }
-          
         env:
           RUNNER_LABEL: ${{ runner.name }}
           USE_ADMIN_USER: ${{ github.event.inputs.user_mode == 'admin' && 'true' || 'false' }}
