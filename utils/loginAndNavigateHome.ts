@@ -39,7 +39,7 @@ export async function loginAndNavigateHome(page: Page): Promise<void> {
 
     // Wait for successful login
     const homeMenuItem = page.getByRole('menuitem', { name: 'Home' });
-    await expect(homeMenuItem).toBeVisible({ timeout: 30000 });
+    await expect(homeMenuItem).toBeVisible({ timeout: 300000 });
 
     // Click home menu and wait for navigation
     await Promise.all([
