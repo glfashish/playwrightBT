@@ -96,7 +96,7 @@ jobs:
           $isAdminMode = "${{ github.event.inputs.user_mode }}" -eq "admin"
           
           # Set workers based on mode
-          $workers = if ($isAdminMode) { 1 } else { 3 }
+          $workers = if ($isAdminMode) { 1 } else { 2 }
           
           # Set mode display string
           $modeString = if ($isAdminMode) { "ADMIN" } else { "GENERAL" }
