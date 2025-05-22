@@ -76,7 +76,7 @@ test.describe('Domestic Wire Template Payments', () => {
   domesticWireTemplateData.forEach((templateData, index) => {
     test(`Test ${index + 1}: ${templateData.TestCase}`, async ({ page }) => {
       
-      await page.pause(); 
+      //await page.pause(); 
       // Start POManager
       const pom = new POManager(page);
       console.log(page);
