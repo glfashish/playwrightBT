@@ -28,6 +28,11 @@ on:
 jobs:
   test:
     name: Run Playwright Tests
+    # Add permissions block at the job level
+    permissions:
+      contents: write      # Required for pushing to gh-pages
+      pages: write        # Required for GitHub Pages
+      id-token: write     # Required for GitHub Pages authentication
     runs-on: ${{ github.event.inputs.runner == 'any' && 'self-hosted' || github.event.inputs.runner }}
     timeout-minutes: 60
     
@@ -144,3 +149,5 @@ jobs:
           publish_dir: ./allure-report
           publish_branch: gh-pages
           keep_files: true
+          force_orphan: true    # Forces creation of gh-pages branch
+          commit_message: 'Deploy Allure report to GitHub Pages'
