@@ -25,7 +25,11 @@ const DrawdownWireData = csvToJson<DrawdownWirePaymentCSVData>('test-data/Drawdo
 
 test.describe('Drawdown Wire Payment Creation Test', () => {
     // Add afterEach hook to release user session
-  test.afterEach(async () => {
+    test.beforeEach(async ({ page }, testInfo) => {
+      console.log(`Test ${testInfo.title} running on worker: ${testInfo.workerIndex}`);
+    });
+    
+    test.afterEach(async () => {
     await releaseUserSession();
   });
 
