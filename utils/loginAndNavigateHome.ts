@@ -42,7 +42,7 @@ class UserSessionManager {
   async acquireUser(workerId: string): Promise<{ companyId: string; userId: string; password: string }> {
     try {
       // Choose user based on worker ID
-      const userNumber = (parseInt(workerId) % a3) + 1;
+      const userNumber = (parseInt(workerId) % 3) + 1;
       const configPath = path.join(
         process.cwd(), 
         'config', 
@@ -79,6 +79,15 @@ class UserSessionManager {
 
 // Create a singleton instance
 const sessionManager = new UserSessionManager();
+
+/**
+ * Sets the admin mode for user session management
+ * @param enabled - Whether to use admin credentials
+ */
+export function setAdminMode(enabled: boolean): void {
+  sessionManager.setAdminMode(enabled);
+  console.log(`Global admin mode set to: ${enabled ? 'enabled' : 'disabled'}`);
+}
 
 /**
  * Logs in to the application and navigates to the home page
