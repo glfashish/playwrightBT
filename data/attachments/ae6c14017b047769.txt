@@ -1,0 +1,7 @@
+Test Test 1: R1Successful Drawdown wire payment with all fields running on worker: 0
+Worker 0 attempting to acquire user
+Worker 0 using credentials for AKULKARNI
+Worker 0 successfully logged in with user: AKULKARNI
+Payment with ID 48252 approved successfully.
+Releasing user AKULKARNI from worker 0
+Worker 0 released user session

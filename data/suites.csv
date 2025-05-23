@@ -1,0 +1,5 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","74464","Test 2: R2Successful Drawdown wire payment with all fields","chromium","Fri May 23 13:31:07 IST 2025","passed","Fri May 23 13:32:21 IST 2025","Drawdown Wire Payment Creation Test","DrawdownWirePayment.spec.ts","",""
+"","184672","Test 3: R3Successful Drawdown wire payment with all fields","chromium","Mon May 19 17:43:34 IST 2025","failed","Mon May 19 17:46:38 IST 2025","Drawdown Wire Payment Creation Test","DrawdownWirePayment.spec.ts","",""
+"","77172","Test 1: R1Successful Drawdown wire payment with all fields","chromium","Fri May 23 13:31:07 IST 2025","passed","Fri May 23 13:32:24 IST 2025","Drawdown Wire Payment Creation Test","DrawdownWirePayment.spec.ts","",""
+"","4273","Test 1: Successful Drawdown wire payment with all fields","chromium","Thu May 15 16:58:25 IST 2025","failed","Thu May 15 16:58:29 IST 2025","Drawdown Wire Payment Creation Test","DrawdownWirePayment.spec.ts","",""

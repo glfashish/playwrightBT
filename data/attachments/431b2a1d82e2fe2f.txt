@@ -1,0 +1,5 @@
+Running tests on machine: unknown
+Using test user: from login.json
+Current runner label: default
+Reading login configuration from: C:\Users\Aashishk\Documents\PlaywrightBT\config\login-default.json
+Using credentials for user: AKULKARNI
